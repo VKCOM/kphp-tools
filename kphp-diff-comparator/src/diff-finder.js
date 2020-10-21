@@ -1,3 +1,7 @@
+// Compiler for PHP (aka KPHP) tools
+// Copyright (c) 2020 LLC «V Kontakte»
+// Distributed under the GPL v3 License, see LICENSE.notice.txt
+
 /*
     Kernel logic of this project: recursively compare 2 directories.
     This is fast, because we don't compare all contents of all files — only headings, as in contains //crc64 comment.

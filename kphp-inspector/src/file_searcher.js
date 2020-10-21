@@ -1,3 +1,7 @@
+// Compiler for PHP (aka KPHP) tools
+// Copyright (c) 2020 LLC «V Kontakte»
+// Distributed under the GPL v3 License, see LICENSE.notice.txt
+
 /*
     Module to find files of function/classes by user search input.
     Folder of KPHP codegenerated code contains thousand of functions in subdirs, and matching is done using file names, not content parsing.

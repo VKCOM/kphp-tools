@@ -1,3 +1,7 @@
+// Compiler for PHP (aka KPHP) tools
+// Copyright (c) 2020 LLC «V Kontakte»
+// Distributed under the GPL v3 License, see LICENSE.notice.txt
+
 /*
     Interactive console logic is simple: rlPrompt() displays an entry
     >

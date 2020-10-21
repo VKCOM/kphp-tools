@@ -1,3 +1,7 @@
+// Compiler for PHP (aka KPHP) tools
+// Copyright (c) 2020 LLC «V Kontakte»
+// Distributed under the GPL v3 License, see LICENSE.notice.txt
+
 const VERSION = '1.0.0';
 
 // console arguments (argv) override these defaults

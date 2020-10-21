@@ -1,3 +1,7 @@
+// Compiler for PHP (aka KPHP) tools
+// Copyright (c) 2020 LLC «V Kontakte»
+// Distributed under the GPL v3 License, see LICENSE.notice.txt
+
 /*
     Module that outputs formatted results: print info/src of a function, print info of a class.
     A simple file with many colors, alignments and console.log().

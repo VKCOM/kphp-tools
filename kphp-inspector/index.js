@@ -1,3 +1,7 @@
+// Compiler for PHP (aka KPHP) tools
+// Copyright (c) 2020 LLC «V Kontakte»
+// Distributed under the GPL v3 License, see LICENSE.notice.txt
+
 /*
     `kphp-inspector` - a console tool to query and examine KPHP output — C++ sources generated from PHP.
     Written in Node.JS without any dependencies, it is basically invoked as

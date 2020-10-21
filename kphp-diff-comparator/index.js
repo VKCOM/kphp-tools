@@ -1,3 +1,7 @@
+// Compiler for PHP (aka KPHP) tools
+// Copyright (c) 2020 LLC «V Kontakte»
+// Distributed under the GPL v3 License, see LICENSE.notice.txt
+
 /*
     `kphp-diff-comparator` - a console tool to compare 2 KPHP outputs (folders with .cpp/.h files generated from PHP code).
     Useful for KPHP development: you generate your site with stable (master) KPHP, change KPHP sources re-generate —
