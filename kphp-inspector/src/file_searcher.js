@@ -12,6 +12,7 @@ const fs = require('fs');
 const child_process = require('child_process');
 
 const env = require('./env');
+const utils = require('./utils');
 
 /**
  * @param {string} fullFileName
@@ -38,42 +39,137 @@ function doesFileContainFunction(fullFileName) {
 }
 
 /**
- * @param {string} q Search string from console
+ * @param {string} query Search string from console
  * @return {string[]} Full file names, to be passed to parseCppFunction()
  */
-function performSearchForFunction(q) {
-  let qParts = splitUserSearchStr(q);
-  if (!qParts.length) {
-    return [];
+function performSearchForFunction(query) {
+  const strict = query.startsWith('\\');
+  utils.debug(`Start search function by query: ${query}, strict: ${strict}`);
+
+  if (strict) {
+    // Convert the name to the form that KPHP uses for files.
+    const filename = convertFqnToCppFileName(query);
+    // When searching for such a string, when we find it, we will be sure
+    // that this is the required file, and not a function file with the same
+    // suffix, for example:
+    //   filename    = "someFunc"
+    //   found_files = ["src/someFunc.cpp", "src/someFuncOther.cpp"]
+    const filename_with_dot = filename + '\\.';
+    utils.debug(`Filename for search: ${filename_with_dot}`);
+
+    const files = findFunctionFilesWithNameLike(filename_with_dot);
+    utils.debug(`Found files: ${files.length === 0 ? 'nothing' : files.join(', ')}`);
+
+    return files.filter(file => doesFileContainFunction(file));
   }
-  let longestQLen = Math.max(...qParts.map(p => p.length));
-  let longestQ = qParts.find(p => p.length === longestQLen);
 
-  /** @var {string[]} */
-  let output = child_process.execSync(`find ${env.RUN_ARGV.KPHP_COMPILED_ROOT} -iname "*${longestQ}*"`).toString().split('\n');
-  // strip out duplicates and strange files: leave only .cpp and .h, also filter out .h files of classes
-  output = output.filter(fn =>
-    fn.endsWith('.cpp') || (fn.endsWith('.h') && !output.includes(fn.substr(0, fn.length - 2) + '.cpp') && !fn.includes('cl/C@')));
+  let [qParts, longestQ] = queryToParts(query);
+  const files = findFilesWithNameLike(longestQ);
+  utils.debug(`Found files: ${files.length === 0 ? 'nothing' : files.join(', ')}`);
 
-  return output.filter(fn => doesFileSatisfyQ(fn, qParts) && doesFileContainFunction(fn));
+  return files.filter(fn => doesFileSatisfyQ(fn, qParts) && doesFileContainFunction(fn));
 }
 
 /**
- * @param {string} q Search string from console
+ * @param {string} query Search string from console
  * @return {string[]} Full file names, to be passed to parseCppClass()
  */
-function performSearchForClass(q) {
-  let qParts = splitUserSearchStr(q);
-  if (!qParts.length) {
-    return [];
+function performSearchForClass(query) {
+  const strict = query.startsWith('\\');
+  utils.debug(`Start search class by query: ${query}, strict: ${strict}`);
+
+  if (strict) {
+    // Convert the name to the form that KPHP uses for files.
+    const className = convertFqnToCppFileName(query);
+    const classnameWithDot = className + '\\.';
+    utils.debug(`Filename for search: ${classnameWithDot}`);
+
+    const files = findFilesWithNameLike(classnameWithDot);
+    utils.debug(`Found files: ${files.length === 0 ? 'nothing' : files.join(', ')}`);
+
+    return files.filter(file => file.endsWith('.h'));
   }
+
+  let { qParts, longestQ } = queryToParts(query);
+  let files = findClassFilesWithNameLike(longestQ);
+  utils.debug(`Found files: ${files.length === 0 ? 'nothing' : files.join(', ')}`);
+
+  return files.filter(file => file.endsWith('.h') && doesFileSatisfyQ(file, qParts));
+}
+
+/**
+ * @param {string} query
+ * @returns {(string[]|string)[]}
+ */
+function queryToParts(query) {
+  let qParts = splitUserSearchStr(query);
+  if (qParts.length === 0) {
+    return [[], ''];
+  }
+
+  utils.debug(`Query parts: ${qParts.join(', ')}`);
+
   let longestQLen = Math.max(...qParts.map(p => p.length));
   let longestQ = qParts.find(p => p.length === longestQLen);
+  utils.debug(`Longest query part: ${longestQ}`);
+  return [qParts, longestQ];
+}
+
+/**
+ * @param {string} query
+ * @return {string[]}
+ */
+function findClassFilesWithNameLike(query) {
+  return findFilesWithNameLike(query, '/cl');
+}
+
+/**
+ * @param {string} query
+ * @return {string[]}
+ */
+function findFunctionFilesWithNameLike(query) {
+  return findFilesWithNameLike(query).filter((filename, _, output) =>
+    // strip out duplicates and strange files: leave only .cpp and .h, also filter out .h files of classes
+    filename.endsWith('.cpp') ||
+    (
+      filename.endsWith('.h') &&
+      !output.includes(filename.substr(0, filename.length - 2) + '.cpp') &&
+      !filename.includes('cl/C@')
+    ),
+  );
+}
+
+/**
+ * @param {string} query
+ * @param {string} pathSuffix
+ * @return {string[]}
+ */
+function findFilesWithNameLike(query, pathSuffix = '') {
+  const command = `find ${env.RUN_ARGV.KPHP_COMPILED_ROOT}${pathSuffix} -iname "*${query}*"`;
+
+  utils.debug(`Run local command: ${command}`);
 
   /** @var {string[]} */
-  let output = child_process.execSync(`find ${env.RUN_ARGV.KPHP_COMPILED_ROOT}/cl -iname "*${longestQ}*"`).toString().split('\n');
+  let output = child_process
+    .execSync(command)
+    .toString()
+    .trim()
+    .split('\n');
 
-  return output.filter(fn => fn.endsWith('.h') && doesFileSatisfyQ(fn, qParts));
+  utils.debug(`Output: ${output}`);
+
+  return output;
+}
+
+/**
+ * @param {string} fqn
+ * @return {string}
+ */
+function convertFqnToCppFileName(fqn) {
+  return fqn
+    .replace('\\', '')
+    .replace(/::/g, '@@')
+    .replace(/\\/g, '@');
 }
 
 /**

@@ -56,6 +56,9 @@ function parseConsoleArgv(argv) {
       case '--version':
         env.RUN_ARGV.JUST_SHOW_VERSION = true;
         break;
+      case '--debug':
+        env.RUN_ARGV.DEBUG = true;
+        break;
     }
   }
 }
