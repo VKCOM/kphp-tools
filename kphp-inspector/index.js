@@ -14,18 +14,20 @@
     For more specific command-line arguments see docs.
  */
 
-var fs = require('fs');
-var interactive = require('./src/interactive-console');
-var env = require('./src/env');
-var searcher = require('./src/file_searcher');
-var printer = require('./src/printer');
-var parser = require('./src/cpp_parser');
+const fs = require('fs');
 
+const interactive = require('./src/interactive-console');
+const env = require('./src/env');
+const searcher = require('./src/file_searcher');
+const printer = require('./src/printer');
+const parser = require('./src/cpp_parser');
 
+/**
+ * @param {string[]} argv
+ */
 function parseConsoleArgv(argv) {
-  for (var i = 0; i < argv.length; ++i) {
+  for (let i = 0; i < argv.length; ++i) {
     switch (argv[i]) {
-
       case '--root':
         env.RUN_ARGV.KPHP_COMPILED_ROOT = argv[i + 1];
         break;
@@ -54,7 +56,6 @@ function parseConsoleArgv(argv) {
       case '--version':
         env.RUN_ARGV.JUST_SHOW_VERSION = true;
         break;
-
     }
   }
 }
@@ -68,7 +69,6 @@ function checkRunArgv() {
 
   checkDir(env.RUN_ARGV.KPHP_COMPILED_ROOT, "invalid --root cmd argument");
 }
-
 
 // ——————————————————————
 

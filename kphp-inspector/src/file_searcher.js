@@ -8,9 +8,10 @@
     For user input "VK\Post::analyze" — we get ['vk','post','analyze'] and search files that contain all of qParts in their name.
  */
 
-var fs = require('fs');
-var child_process = require('child_process');
-var env = require('./env');
+const fs = require('fs');
+const child_process = require('child_process');
+
+const env = require('./env');
 
 /**
  * @param {string} fullFileName
@@ -18,9 +19,9 @@ var env = require('./env');
  */
 function doesFileSatisfyQ(fullFileName, qParts) {
   return qParts.every(p => {
-    var pos = fullFileName.toLowerCase().indexOf(p);
-    var l = fullFileName[pos - 1];
-    var r = fullFileName[pos + p.length];
+    const pos = fullFileName.toLowerCase().indexOf(p);
+    const l = fullFileName[pos - 1];
+    const r = fullFileName[pos + p.length];
 
     return pos !== -1
       && (l === '' || !/[a-zA-Z\d]/.test(l))
@@ -32,13 +33,9 @@ function doesFileSatisfyQ(fullFileName, qParts) {
  * @param {string} fullFileName
  */
 function doesFileContainFunction(fullFileName) {
-  /** @var {string} */
-  var c = fs.readFileSync(fullFileName, 'UTF-8');
-
+  const c = fs.readFileSync(fullFileName, 'UTF-8');
   return c.includes(' f$') && c.includes('(');
 }
-
-
 
 /**
  * @param {string} q Search string from console
@@ -91,4 +88,3 @@ function splitUserSearchStr(q) {
 module.exports.splitUserSearchStr = splitUserSearchStr;
 module.exports.performSearchForFunction = performSearchForFunction;
 module.exports.performSearchForClass = performSearchForClass;
-

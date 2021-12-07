@@ -22,9 +22,10 @@ function stripCppInlineComments(src) {
  * @return {string} "$posts", "$number"
  */
 function extractArgNameFromCppArgumentDecl(paramDecl) {
-  var pos = paramDecl.lastIndexOf(' ');
-  while (paramDecl[pos] === ' ' || paramDecl[pos] === '&' || paramDecl[pos] === 'v')
+  let pos = paramDecl.lastIndexOf(' ');
+  while (paramDecl[pos] === ' ' || paramDecl[pos] === '&' || paramDecl[pos] === 'v') {
     pos++;
+  }
   return paramDecl.substr(pos).trimEnd();
 }
 
@@ -33,7 +34,7 @@ function extractArgNameFromCppArgumentDecl(paramDecl) {
  * @return {string} "array< class_instance<C$VK$Feed$Post> > const", "uint64_t"
  */
 function extractArgTypeFromCppArgumentDecl(paramDecl) {
-  var pos = paramDecl.lastIndexOf(' ');
+  const pos = paramDecl.lastIndexOf(' ');
   return paramDecl.substr(0, pos).trimStart().replace(' const', '');
 }
 
@@ -58,7 +59,7 @@ class ParsedCppFunction {
 
   /** @return string */
   get phpFuncName() {
-    var m = this._matchNameAndArguments();     // m[1]: f$someFn, f$VK$Feed$Rank$$someFn()
+    const m = this._matchNameAndArguments();     // m[1]: f$someFn, f$VK$Feed$Rank$$someFn()
     return !m ? '' : m[1]
       .replace(/^f\$fork\$/, '')
       .replace(/^f\$/, '')
@@ -101,15 +102,15 @@ class ParsedCppFunction {
    * @return {{varName:string, cppType:string}[]}
    */
   getParameters() {
-    var paramsStr = this._matchNameAndArguments()[2];
+    const paramsStr = this._matchNameAndArguments()[2];
 
     // split paramsStr by ',' handling nesting
     /** @type {string[]} */
-    var declarations = [];
-    var nest_level = 0;
-    var next_arg_start = 0;
-    for (var i = 0; i < paramsStr.length; ++i) {
-      var c = paramsStr[i];
+    let declarations = [];
+    let nest_level = 0;
+    let next_arg_start = 0;
+    for (let i = 0; i < paramsStr.length; ++i) {
+      const c = paramsStr[i];
       if (c === '(' || c === '<')
         nest_level++;
       else if (c === ')' || c === '>')
@@ -125,7 +126,7 @@ class ParsedCppFunction {
     return declarations
       .map((paramDecl) => ({
         varName: extractArgNameFromCppArgumentDecl(paramDecl),
-        cppType: extractArgTypeFromCppArgumentDecl(paramDecl)
+        cppType: extractArgTypeFromCppArgumentDecl(paramDecl),
       }))
       .filter((param) => param.varName !== '$this');
   }
@@ -134,17 +135,17 @@ class ParsedCppFunction {
    * @return {{varName:string, cppType:string}[]}
    */
   getLocalVars() {
-    var lines = this.cppSrcStripped.split("\n");
-    var local_vars = [];
-    var line_start = this.isResumable ? '    ' : '  ';
+    const lines = this.cppSrcStripped.split("\n");
+    let local_vars = [];
+    const line_start = this.isResumable ? '    ' : '  ';
 
-    for (var line of lines) {
-      var pos_v$ = line.indexOf(' v$');
+    for (let line of lines) {
+      const pos_v$ = line.indexOf(' v$');
       if (pos_v$ < 0)
         continue;
-      var before_v$ = line.substr(0, pos_v$);
+      const before_v$ = line.substr(0, pos_v$);
 
-      var is_local_var_decl = line.startsWith(line_start) && line[line_start.length] !== ' '
+      const is_local_var_decl = line.startsWith(line_start) && line[line_start.length] !== ' '
         && !line.startsWith("  v$")
         && !line.startsWith("  return")
         // drop out some implicit kphp-generated cpp vars, which come not from original php source
@@ -162,7 +163,7 @@ class ParsedCppFunction {
         let varName = line.match(/\s(v\$[\w$]+)/)[1];
         local_vars.push({
           varName: varName.substr(1),     // v$name => $name
-          cppType: line.substr(0, line.indexOf(varName)).trim()
+          cppType: line.substr(0, line.indexOf(varName)).trim(),
         });
       }
     }
@@ -210,7 +211,7 @@ class ParsedCppClass {
 
   /** @return string */
   get phpClassName() {
-    var m = this.src.match(/^struct\sC\$([\w$]+)/m);
+    const m = this.src.match(/^struct\sC\$([\w$]+)/m);
     return !m ? '' : m[1]
       .replace(/\$/g, '\\');
   }
@@ -219,17 +220,16 @@ class ParsedCppClass {
    * @return {{varName:string, cppType:string}[]}
    */
   getInstanceVars() {
-    var vars = [], m, re = /^\s\s(.+?)\s\$(\w+){/mg;
+    let vars = [], m, re = /^\s\s(.+?)\s\$(\w+){/mg;
     while (m = re.exec(this.src)) {
       vars.push({
         varName: m[2],
-        cppType: m[1]
+        cppType: m[1],
       });
     }
     return vars;
   }
 }
-
 
 module.exports.parseCppFunction = function parseCppFunction(fullFileName) {
   return new ParsedCppFunction(fullFileName);
