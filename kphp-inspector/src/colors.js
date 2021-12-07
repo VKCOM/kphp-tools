@@ -2,7 +2,7 @@
 // Copyright (c) 2020 LLC «V Kontakte»
 // Distributed under the GPL v3 License, see LICENSE.notice.txt
 
-const COLORS = {
+const Colors = {
   RESET: "\x1b[0m",
 
   Bright: "\x1b[1m",
@@ -31,4 +31,4 @@ const COLORS = {
   BgWhite: "\x1b[47m",
 };
 
-module.exports = COLORS;
+module.exports = Colors;

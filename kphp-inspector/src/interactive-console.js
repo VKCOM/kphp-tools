@@ -10,13 +10,15 @@
     If many results for {query} found, interactive menu is displayed with up-down keyboard keys navigation.
  */
 
-var parser = require('./cpp_parser');
-var printer = require('./printer');
-var COLORS = require('./colors');
-var ENV = require('./env');
-var readline = require('readline');
-var rl;   // = readline.createInterface(...)
-var searcher = require('./file_searcher');
+const readline = require('readline');
+
+const Colors = require('./colors');
+const parser = require('./cpp_parser');
+const printer = require('./printer');
+const env = require('./env');
+const searcher = require('./file_searcher');
+
+let rl;   // = readline.createInterface(...)
 
 function rlPrompt() {
   if (!rl || rl.closed) {
@@ -32,15 +34,15 @@ function rlPrompt() {
 }
 
 function printHelp() {
-  console.log(`${COLORS.Bright}f {query}${COLORS.RESET}   — print info of function`);
-  console.log(`${COLORS.Bright}src {query}${COLORS.RESET} — print cpp source code of function`);
-  console.log(`${COLORS.Bright}cl {query}${COLORS.RESET}  — print info about class instance`);
-  console.log(`${COLORS.Bright}q[uit]${COLORS.RESET}      — close interactive console`);
+  console.log(`${Colors.Bright}f {query}${Colors.RESET}   — print info of function`);
+  console.log(`${Colors.Bright}src {query}${Colors.RESET} — print cpp source code of function`);
+  console.log(`${Colors.Bright}cl {query}${Colors.RESET}  — print info about class instance`);
+  console.log(`${Colors.Bright}q[uit]${Colors.RESET}      — close interactive console`);
   console.log('Examples of {query}: reorderTags, messages_send, ClassName method, \\Full\\FQN::method() . If many functions found, menu is displayed.');
 }
 
 function printVersion() {
-  console.log(`kphp_inspector v${ENV.VERSION}`);
+  console.log(`kphp_inspector v${env.VERSION}`);
 }
 
 function onCommand_help() {
@@ -93,8 +95,8 @@ function onCommand_printClassInfo(q) {
  * @param {Function} callback
  */
 function showChooseInteractiveMenu(menuItems, callback) {
-  var activeIdx = 0;
-  var firstDraw = true;
+  let activeIdx = 0;
+  let firstDraw = true;
 
   function redrawMenu() {
     if (!firstDraw) {
@@ -105,7 +107,7 @@ function showChooseInteractiveMenu(menuItems, callback) {
 
     menuItems.forEach((fn, i) => {
       if (i === activeIdx) {
-        console.log(COLORS.Reverse + fn + COLORS.RESET);
+        console.log(Colors.Reverse + fn + Colors.RESET);
       } else {
         console.log(fn);
       }
@@ -173,7 +175,7 @@ function showChooseInteractiveMenu(menuItems, callback) {
  */
 function printFunctionSearchResults(q, foundFiles, onChosenCallback) {
   if (foundFiles.length === 0) {
-    console.log(COLORS.FgRed + `No function found for query '${q}'` + COLORS.RESET);
+    console.log(Colors.FgRed + `No function found for query '${q}'` + Colors.RESET);
   } else if (foundFiles.length === 1) {
     onChosenCallback(0);
   } else {
@@ -191,7 +193,7 @@ function printFunctionSearchResults(q, foundFiles, onChosenCallback) {
  */
 function printClassSearchResults(q, foundFiles, onChosenCallback) {
   if (foundFiles.length === 0) {
-    console.log(COLORS.FgRed + `No class found for query '${q}' (maybe, it's not an instance class?)` + COLORS.RESET);
+    console.log(Colors.FgRed + `No class found for query '${q}' (maybe, it's not an instance class?)` + Colors.RESET);
   } else if (foundFiles.length === 1) {
     onChosenCallback(0);
   } else {
@@ -202,12 +204,11 @@ function printClassSearchResults(q, foundFiles, onChosenCallback) {
   }
 }
 
-
 /**
  * @param {string} cmd User input
  */
 function parseAndExecuteInputCommand(cmd) {
-  var shouldPrompt = true;
+  let shouldPrompt = true;
 
   if (cmd === '') {
   } else if (cmd === 'exit' || cmd === 'q' || cmd === 'quit') {
@@ -234,4 +235,3 @@ module.exports.start = function() {
 
 module.exports.printHelp = printHelp;
 module.exports.printVersion = printVersion;
-
