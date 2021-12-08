@@ -74,11 +74,11 @@ function performSearchForClass(query) {
   utils.debug(`Start search class by query: ${query}`);
 
   if (isFQN) {
-    const className = convertFqnToKphpStyleCppFileName(query);
-    const classNameWithDot = className + '\\.';
-    utils.debug(`Filename for search: ${classNameWithDot}`);
+    const filename = convertFqnToKphpStyleCppFileName(query);
+    const filenameWithDot = filename + '\\.';
+    utils.debug(`Filename for search: ${filenameWithDot}`);
 
-    const files = findClassFilesWithNameLike(classNameWithDot);
+    const files = findClassFilesWithNameLike(filenameWithDot);
     utils.debug(`Found files: ${files.length === 0 ? 'empty' : files.join(', ')}`);
 
     return files.filter(filename => filename.endsWith('.h'));
@@ -120,23 +120,23 @@ function queryToParts(query) {
  * Searches for files for classes.
  * @see findFilesWithNameLike
  *
- * @param {string} query Search string from console
- * @return {string[]}    An array of found files
+ * @param {string} name Filename to search
+ * @return {string[]}   An array of found files
  */
-function findClassFilesWithNameLike(query) {
-  return findFilesWithNameLike(query, `${env.RUN_ARGV.KPHP_COMPILED_ROOT}/cl`, false);
+function findClassFilesWithNameLike(name) {
+  return findFilesWithNameLike(name, `${env.RUN_ARGV.KPHP_COMPILED_ROOT}/cl`, false);
 }
 
 /**
  * Searches for files for functions with additional filtering.
  * @see findFilesWithNameLike
  *
- * @param {string} query         Search string from console
+ * @param {string} name          Filename to search
  * @param {boolean} searchPrefix Specifies whether to search for a prefix or a substring
  * @return {string[]}            An array of found files
  */
-function findFunctionFilesWithNameLike(query, searchPrefix = false) {
-  return findFilesWithNameLike(query, env.RUN_ARGV.KPHP_COMPILED_ROOT, searchPrefix)
+function findFunctionFilesWithNameLike(name, searchPrefix = false) {
+  return findFilesWithNameLike(name, env.RUN_ARGV.KPHP_COMPILED_ROOT, searchPrefix)
     .filter((filename, _, output) =>
       // strip out duplicates and strange files: leave only .cpp and .h, also filter out .h files of classes
       filename.endsWith('.cpp') ||
@@ -153,18 +153,13 @@ function findFunctionFilesWithNameLike(query, searchPrefix = false) {
  *
  * If `searchPrefix` is true, then the search will search for files with the `query` prefix.
  *
- * @param {string} query         Search string from console
+ * @param {string} name          Filename to search
  * @param {string} searchFolder  Folder among the files to be searched
  * @param {boolean} searchPrefix Specifies whether to search for a prefix or a substring
  * @return {string[]}            An array of found files
  */
-function findFilesWithNameLike(query, searchFolder = env.RUN_ARGV.KPHP_COMPILED_ROOT, searchPrefix = false) {
-  let findQuery;
-  if (searchPrefix) {
-    findQuery = `${query}*`;
-  } else {
-    findQuery = `*${query}*`;
-  }
+function findFilesWithNameLike(name, searchFolder = env.RUN_ARGV.KPHP_COMPILED_ROOT, searchPrefix = false) {
+  const findQuery = searchPrefix ? `${name}*` : `*${name}*`;
 
   const command = `find ${searchFolder} -iname "${findQuery}"`;
 
