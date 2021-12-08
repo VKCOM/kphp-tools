@@ -51,20 +51,20 @@ function performSearchForFunction(query) {
     const filename = convertFqnToCppFileName(query);
     // When searching for such a string, when we find it, we will be sure
     // that this is the required file, and not a function file with the same
-    // suffix, for example:
+    // suffix or prefix, for example:
     //   filename    = "someFunc"
     //   found_files = ["src/someFunc.cpp", "src/someFuncOther.cpp"]
-    const filename_with_dot = filename + '\\.';
-    utils.debug(`Filename for search: ${filename_with_dot}`);
+    const filename_with_slash_and_dot = "/" + filename + '\\.';
+    utils.debug(`Filename for search: ${filename_with_slash_and_dot}`);
 
-    const files = findFunctionFilesWithNameLike(filename_with_dot);
+    const files = findFunctionFilesWithNameLike(filename_with_slash_and_dot, false);
     utils.debug(`Found files: ${files.length === 0 ? 'nothing' : files.join(', ')}`);
 
     return files.filter(file => doesFileContainFunction(file));
   }
 
   let [qParts, longestQ] = queryToParts(query);
-  const files = findFilesWithNameLike(longestQ);
+  const files = findFunctionFilesWithNameLike(longestQ);
   utils.debug(`Found files: ${files.length === 0 ? 'nothing' : files.join(', ')}`);
 
   return files.filter(fn => doesFileSatisfyQ(fn, qParts) && doesFileContainFunction(fn));
@@ -125,10 +125,11 @@ function findClassFilesWithNameLike(query) {
 
 /**
  * @param {string} query
+ * @param {boolean} searchInNames
  * @return {string[]}
  */
-function findFunctionFilesWithNameLike(query) {
-  return findFilesWithNameLike(query).filter((filename, _, output) =>
+function findFunctionFilesWithNameLike(query, searchInNames = true) {
+  return findFilesWithNameLike(query, searchInNames).filter((filename, _, output) =>
     // strip out duplicates and strange files: leave only .cpp and .h, also filter out .h files of classes
     filename.endsWith('.cpp') ||
     (
@@ -141,11 +142,12 @@ function findFunctionFilesWithNameLike(query) {
 
 /**
  * @param {string} query
+ * @param {boolean} searchInNames
  * @param {string} pathSuffix
  * @return {string[]}
  */
-function findFilesWithNameLike(query, pathSuffix = '') {
-  const command = `find ${env.RUN_ARGV.KPHP_COMPILED_ROOT}${pathSuffix} -iname "*${query}*"`;
+function findFilesWithNameLike(query, searchInNames = true, pathSuffix = '') {
+  const command = `find ${env.RUN_ARGV.KPHP_COMPILED_ROOT}${pathSuffix} ${searchInNames ? "-iname" : "-iwholename"} "*${query}*"`;
 
   utils.debug(`Run local command: ${command}`);
 
