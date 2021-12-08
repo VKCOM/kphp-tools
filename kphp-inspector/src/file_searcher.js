@@ -40,114 +40,133 @@ function doesFileContainFunction(fullFileName) {
 
 /**
  * @param {string} query Search string from console
- * @return {string[]} Full file names, to be passed to parseCppFunction()
+ * @return {string[]}    Full file names, to be passed to parseCppFunction()
  */
 function performSearchForFunction(query) {
-  const strict = query.startsWith('\\');
-  utils.debug(`Start search function by query: ${query}, strict: ${strict}`);
+  const isFQN = query.startsWith('\\');
+  utils.debug(`Start search function by query: ${query}`);
 
-  if (strict) {
-    // Convert the name to the form that KPHP uses for files.
-    const filename = convertFqnToCppFileName(query);
-    // When searching for such a string, when we find it, we will be sure
-    // that this is the required file, and not a function file with the same
-    // suffix or prefix, for example:
-    //   filename    = "someFunc"
-    //   found_files = ["src/someFunc.cpp", "src/someFuncOther.cpp"]
-    const filename_with_slash_and_dot = "/" + filename + '\\.';
-    utils.debug(`Filename for search: ${filename_with_slash_and_dot}`);
+  if (isFQN) {
+    const filename = convertFqnToKphpStyleCppFileName(query);
+    const filenameWithDot = filename + '\\.';
+    utils.debug(`Filename for search: ${filenameWithDot}`);
 
-    const files = findFunctionFilesWithNameLike(filename_with_slash_and_dot, false);
-    utils.debug(`Found files: ${files.length === 0 ? 'nothing' : files.join(', ')}`);
+    const searchPrefix = true;
+    const files = findFunctionFilesWithNameLike(filenameWithDot, searchPrefix);
+    utils.debug(`Found files: ${files.length === 0 ? 'empty' : files.join(', ')}`);
 
-    return files.filter(file => doesFileContainFunction(file));
+    return files.filter(filename => doesFileContainFunction(filename));
   }
 
-  let [qParts, longestQ] = queryToParts(query);
-  const files = findFunctionFilesWithNameLike(longestQ);
-  utils.debug(`Found files: ${files.length === 0 ? 'nothing' : files.join(', ')}`);
+  let [queryParts, longestPart] = queryToParts(query);
+  const files = findFunctionFilesWithNameLike(longestPart);
+  utils.debug(`Found files: ${files.length === 0 ? 'empty' : files.join(', ')}`);
 
-  return files.filter(fn => doesFileSatisfyQ(fn, qParts) && doesFileContainFunction(fn));
+  return files.filter(filename => doesFileSatisfyQ(filename, queryParts) && doesFileContainFunction(filename));
 }
 
 /**
  * @param {string} query Search string from console
- * @return {string[]} Full file names, to be passed to parseCppClass()
+ * @return {string[]}    Full file names, to be passed to parseCppClass()
  */
 function performSearchForClass(query) {
-  const strict = query.startsWith('\\');
-  utils.debug(`Start search class by query: ${query}, strict: ${strict}`);
+  const isFQN = query.startsWith('\\');
+  utils.debug(`Start search class by query: ${query}`);
 
-  if (strict) {
-    // Convert the name to the form that KPHP uses for files.
-    const className = convertFqnToCppFileName(query);
-    const classnameWithDot = className + '\\.';
-    utils.debug(`Filename for search: ${classnameWithDot}`);
+  if (isFQN) {
+    const className = convertFqnToKphpStyleCppFileName(query);
+    const classNameWithDot = className + '\\.';
+    utils.debug(`Filename for search: ${classNameWithDot}`);
 
-    const files = findFilesWithNameLike(classnameWithDot);
-    utils.debug(`Found files: ${files.length === 0 ? 'nothing' : files.join(', ')}`);
+    const files = findClassFilesWithNameLike(classNameWithDot);
+    utils.debug(`Found files: ${files.length === 0 ? 'empty' : files.join(', ')}`);
 
-    return files.filter(file => file.endsWith('.h'));
+    return files.filter(filename => filename.endsWith('.h'));
   }
 
-  let { qParts, longestQ } = queryToParts(query);
-  let files = findClassFilesWithNameLike(longestQ);
-  utils.debug(`Found files: ${files.length === 0 ? 'nothing' : files.join(', ')}`);
+  let [queryParts, longestPart] = queryToParts(query);
+  let files = findClassFilesWithNameLike(longestPart);
+  utils.debug(`Found files: ${files.length === 0 ? 'empty' : files.join(', ')}`);
 
-  return files.filter(file => file.endsWith('.h') && doesFileSatisfyQ(file, qParts));
+  return files.filter(filename => filename.endsWith('.h') && doesFileSatisfyQ(filename, queryParts));
 }
 
 /**
+ * Convert search query into parts and looking for the longest.
+ * For example
+ *   "ClassName::method" -> parts: ['classname','method'], longest: 'classname'
+ *   "VK Feed something" -> parts: ['vk','feed','something'], longest: 'something'
+ *
+ * Returns the parts in first element and the longest part in second.
+ *
  * @param {string} query
- * @returns {(string[]|string)[]}
+ * @returns {[string[], string]}
  */
 function queryToParts(query) {
-  let qParts = splitUserSearchStr(query);
-  if (qParts.length === 0) {
+  let queryParts = splitUserSearchStr(query);
+  if (queryParts.length === 0) {
     return [[], ''];
   }
 
-  utils.debug(`Query parts: ${qParts.join(', ')}`);
+  utils.debug(`Query parts: ${queryParts.join(', ')}`);
 
-  let longestQLen = Math.max(...qParts.map(p => p.length));
-  let longestQ = qParts.find(p => p.length === longestQLen);
-  utils.debug(`Longest query part: ${longestQ}`);
-  return [qParts, longestQ];
+  let longestQueryLen = Math.max(...queryParts.map(p => p.length));
+  let longestPart = queryParts.find(p => p.length === longestQueryLen);
+
+  return [queryParts, longestPart];
 }
 
 /**
- * @param {string} query
- * @return {string[]}
+ * Searches for files for classes.
+ * @see findFilesWithNameLike
+ *
+ * @param {string} query Search string from console
+ * @return {string[]}    An array of found files
  */
 function findClassFilesWithNameLike(query) {
-  return findFilesWithNameLike(query, '/cl');
+  return findFilesWithNameLike(query, `${env.RUN_ARGV.KPHP_COMPILED_ROOT}/cl`, false);
 }
 
 /**
- * @param {string} query
- * @param {boolean} searchInNames
- * @return {string[]}
+ * Searches for files for functions with additional filtering.
+ * @see findFilesWithNameLike
+ *
+ * @param {string} query         Search string from console
+ * @param {boolean} searchPrefix Specifies whether to search for a prefix or a substring
+ * @return {string[]}            An array of found files
  */
-function findFunctionFilesWithNameLike(query, searchInNames = true) {
-  return findFilesWithNameLike(query, searchInNames).filter((filename, _, output) =>
-    // strip out duplicates and strange files: leave only .cpp and .h, also filter out .h files of classes
-    filename.endsWith('.cpp') ||
-    (
-      filename.endsWith('.h') &&
-      !output.includes(filename.substr(0, filename.length - 2) + '.cpp') &&
-      !filename.includes('cl/C@')
-    ),
-  );
+function findFunctionFilesWithNameLike(query, searchPrefix = false) {
+  return findFilesWithNameLike(query, env.RUN_ARGV.KPHP_COMPILED_ROOT, searchPrefix)
+    .filter((filename, _, output) =>
+      // strip out duplicates and strange files: leave only .cpp and .h, also filter out .h files of classes
+      filename.endsWith('.cpp') ||
+      (
+        filename.endsWith('.h') &&
+        !output.includes(filename.substr(0, filename.length - 2) + '.cpp') &&
+        !filename.includes('cl/C@')
+      ),
+    );
 }
 
 /**
- * @param {string} query
- * @param {boolean} searchInNames
- * @param {string} pathSuffix
- * @return {string[]}
+ * Function searches for files in `searchFolder` that have the `query` substring in the name.
+ *
+ * If `searchPrefix` is true, then the search will search for files with the `query` prefix.
+ *
+ * @param {string} query         Search string from console
+ * @param {string} searchFolder  Folder among the files to be searched
+ * @param {boolean} searchPrefix Specifies whether to search for a prefix or a substring
+ * @return {string[]}            An array of found files
  */
-function findFilesWithNameLike(query, searchInNames = true, pathSuffix = '') {
-  const command = `find ${env.RUN_ARGV.KPHP_COMPILED_ROOT}${pathSuffix} ${searchInNames ? "-iname" : "-iwholename"} "*${query}*"`;
+function findFilesWithNameLike(query, searchFolder = env.RUN_ARGV.KPHP_COMPILED_ROOT, searchPrefix = false) {
+  let findQuery;
+  if (searchPrefix) {
+    findQuery = `${query}*`;
+  } else {
+    findQuery = `*${query}*`;
+  }
+
+  const command = `find ${searchFolder} -iname "${findQuery}"`;
 
   utils.debug(`Run local command: ${command}`);
 
@@ -164,10 +183,16 @@ function findFilesWithNameLike(query, searchInNames = true, pathSuffix = '') {
 }
 
 /**
+ * Converts the passed fqn to a filename that KPHP uses to store the class with this fqn.
+ *
+ * For example:
+ *   fqn: \VK\Namespace\SomeClass::__construct
+ *   path: VK@Namespace@SomeClass@@__construct
+ *
  * @param {string} fqn
  * @return {string}
  */
-function convertFqnToCppFileName(fqn) {
+function convertFqnToKphpStyleCppFileName(fqn) {
   return fqn
     .replace('\\', '')
     .replace(/::/g, '@@')
