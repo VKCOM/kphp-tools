@@ -103,15 +103,20 @@ function performSearchForClass(query) {
  * @returns {[string[], string]}
  */
 function queryToParts(query) {
-  let queryParts = splitUserSearchStr(query);
+  let queryParts = query
+    .toLowerCase()
+    .trim()
+    .split(/[\\,+\s:()]/)
+    .map(p => p.trim())
+    .filter(p => p !== '');
   if (queryParts.length === 0) {
     return [[], ''];
   }
 
   utils.debug(`Query parts: ${queryParts.join(', ')}`);
 
-  let longestQueryLen = Math.max(...queryParts.map(p => p.length));
-  let longestPart = queryParts.find(p => p.length === longestQueryLen);
+  let longestPartLen = Math.max(...queryParts.map(p => p.length));
+  let longestPart = queryParts.find(p => p.length === longestPartLen);
 
   return [queryParts, longestPart];
 }
@@ -158,7 +163,7 @@ function findFunctionFilesWithNameLike(name, searchPrefix = false) {
  * @param {boolean} searchPrefix Specifies whether to search for a prefix or a substring
  * @return {string[]}            An array of found files
  */
-function findFilesWithNameLike(name, searchFolder = env.RUN_ARGV.KPHP_COMPILED_ROOT, searchPrefix = false) {
+function findFilesWithNameLike(name, searchFolder, searchPrefix = false) {
   const findQuery = searchPrefix ? `${name}*` : `*${name}*`;
 
   const command = `find ${searchFolder} -iname "${findQuery}"`;
@@ -194,15 +199,5 @@ function convertFqnToKphpStyleCppFileName(fqn) {
     .replace(/\\/g, '@');
 }
 
-/**
- * Convert search string "ClassName::method" to ['classname','method'], "VK Feed something" to ['vk','feed','something']
- * @param {string} q
- * @return {string[]}
- */
-function splitUserSearchStr(q) {
-  return q.toLowerCase().trim().split(/[\\,+\s:()]/).map(p => p.trim()).filter(p => p !== '');
-}
-
-module.exports.splitUserSearchStr = splitUserSearchStr;
 module.exports.performSearchForFunction = performSearchForFunction;
 module.exports.performSearchForClass = performSearchForClass;
