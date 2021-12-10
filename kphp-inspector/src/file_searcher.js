@@ -154,9 +154,9 @@ function findFunctionFilesWithNameLike(name, searchPrefix = false) {
 }
 
 /**
- * Function searches for files in `searchFolder` that have the `query` substring in the name.
+ * Function searches for files in `searchFolder` that have the `name` substring in the name.
  *
- * If `searchPrefix` is true, then the search will search for files with the `query` prefix.
+ * If `searchPrefix` is true, then the search will search for files with the `name` prefix.
  *
  * @param {string} name          Filename to search
  * @param {string} searchFolder  Folder among the files to be searched
