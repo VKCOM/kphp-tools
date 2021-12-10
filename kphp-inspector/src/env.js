@@ -14,6 +14,8 @@ const RUN_ARGV = {
   JUST_INFO_ABOUT_CLASS: '',
   JUST_SHOW_HELP: false,
   JUST_SHOW_VERSION: false,
+
+  DEBUG: false,
 };
 
 module.exports.VERSION = VERSION;
